@@ -1,6 +1,6 @@
 import re
 
-NODE_TYPE_NAME_MATCHER = re.compile(r"<\/?([a-zA-Z-]+)([(\/>) ]|$)")
+NODE_TYPE_NAME_MATCHER = re.compile(r"<([a-zA-Z0-9]+)([(\/>) ]|$)")
 
 
 # A void element is one that cannot have any child nodes
@@ -15,6 +15,8 @@ VOID_TYPES = {
 INVISIBLE_TYPES = {
     "audio", "head", "script", "style", "video",
 }
+
+# NOTE: no support for iframe, object and many others
 
 
 class BaseNode:
