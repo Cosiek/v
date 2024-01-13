@@ -141,9 +141,8 @@ def get_new_node(buffer: str):
         if node_type in VOID_TYPES:
             cls = VoidHTMLNode
         elif node_type is None:
-            # this doesn't seem to be a proper html tag
-            # TODO: is ignoring the right thing to do here?
-            return None
+            # this doesn't seem to be a proper html tag - treat it as text
+            cls = TextNode
         else:
             # this assumes that unknown tags are not void
             cls = HTMLNode
