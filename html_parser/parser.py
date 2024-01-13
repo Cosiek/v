@@ -87,6 +87,7 @@ class CommentNode(BaseNode):
 
     def __init__(self, buffer: str):
         self.type = "comment"
+        self.is_closed = False
         self.digest(buffer)
 
     def will_accept(self, buffer: str):
@@ -94,6 +95,30 @@ class CommentNode(BaseNode):
 
     def digest(self, buffer: str):
         self.is_closed = buffer.endswith("-->")
+
+
+class TextareaNode(BaseNode):
+    """
+    textarea tags are a special case, as anything (even valid html) put inside them
+    is not parsed and treated as plain text instead.
+    """
+
+    def __init__(self, buffer: str):
+        self.type = "textarea"
+        self.content = ""
+        self.is_closed = False
+
+    def will_accept(self, buffer: str):
+        return not self.is_closed
+
+    def digest(self, buffer: str):
+        self.content += buffer
+
+        self.is_closed = "</textarea" in self.content
+
+    def get_text(self):
+        # get rid of closing tag before returning
+        return self.content.split("</textarea")[0]
 
 
 class DoctypeNode(BaseNode):
@@ -135,6 +160,8 @@ def get_new_node(buffer: str):
         cls = CommentNode
     elif buffer.startswith("<!doctype"):
         cls = DoctypeNode
+    elif buffer.startswith("<textarea"):
+        cls = TextareaNode
     else:
         # these should be normal html tags
         node_type = get_node_type(buffer)

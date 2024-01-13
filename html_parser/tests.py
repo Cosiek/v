@@ -29,6 +29,25 @@ class HTMLParsingTestCase(TestCase):
 
         self.assertEqual(root.get_text(), "Test text.")
 
+    def test_advanced_html_parsing(self):
+        html = self.get_html("advanced")
+
+        root = parse_html(html)
+
+        self.assertEqual(root.type, "root")
+        self.assertEqual(len(root.nodes), 1)
+
+        expected = (
+            "Header\n"
+            "Nested paragraph1\n"
+            "Nested paragraph2\n"
+            "< p>Invalid tag treated as text\n</p>\n"
+            "This i a <<<textarea>>>\n"
+            "Don't push me!"
+        )
+
+        self.assertEqual(expected, root.get_text())
+
     def test_getting_node_types(self):
         cases = [
             ("p", "<p>"),
