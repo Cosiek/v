@@ -20,7 +20,6 @@ INVISIBLE_TYPES = {
 
 
 class BaseNode:
-
     def will_accept(self, buffer: str):
         return False
 
@@ -29,7 +28,6 @@ class BaseNode:
 
 
 class HTMLNode(BaseNode):
-
     def __init__(self, buffer: str):
         self.type = get_node_type(buffer)
 
@@ -50,7 +48,11 @@ class HTMLNode(BaseNode):
             self.nodes.append(get_new_node(buffer))
 
     def get_text(self):
-        return "\n".join(filter(None, [n.get_text() for n in self.nodes])) if self.is_visible else ""
+        return (
+            "\n".join(filter(None, [n.get_text() for n in self.nodes]))
+            if self.is_visible
+            else ""
+        )
 
     @property
     def is_visible(self):
@@ -58,7 +60,6 @@ class HTMLNode(BaseNode):
 
 
 class VoidHTMLNode(BaseNode):
-
     def __init__(self, buffer: str):
         # void nodes can't contain text - no need to care much for them
         self.type = get_node_type(buffer)
@@ -68,7 +69,6 @@ class VoidHTMLNode(BaseNode):
 
 
 class TextNode(BaseNode):
-
     def __init__(self, buffer: str):
         self.type = "text"
         self.content = buffer
@@ -84,7 +84,6 @@ class TextNode(BaseNode):
 
 
 class CommentNode(BaseNode):
-
     def __init__(self, buffer: str):
         self.type = "comment"
         self.is_closed = False
@@ -122,7 +121,6 @@ class TextareaNode(BaseNode):
 
 
 class DoctypeNode(BaseNode):
-
     def __init__(self, buffer: str):
         self.type = "doctype"
 
@@ -131,7 +129,6 @@ class DoctypeNode(BaseNode):
 
 
 class RootNode:
-
     def __init__(self):
         self.type = "root"
         self.nodes = []
@@ -158,7 +155,7 @@ def get_new_node(buffer: str):
         cls = TextNode
     elif buffer.startswith("<!--"):
         cls = CommentNode
-    elif buffer.startswith("<!doctype"):
+    elif buffer.startswith("<!doctype") or buffer.startswith("<!DOCTYPE"):
         cls = DoctypeNode
     elif buffer.startswith("<textarea"):
         cls = TextareaNode
@@ -181,15 +178,47 @@ def parse_html(html: str) -> RootNode:
     root = RootNode()
 
     buffer = ""
+    current_quote = None
+    is_comment = False
+    is_tag = False
     for letter in html:
         if letter == "<":
-            if buffer.strip():  # no whitespace nodes allowed
-                root.digest(buffer)
-            buffer = "<"
+            if current_quote or is_comment:
+                buffer += letter
+                continue
+            else:
+                is_tag = True
+                if buffer.strip():
+                    root.digest(buffer)
+                buffer = letter
         elif letter == ">":
-            root.digest(buffer + letter)
-            buffer = ""
+            if current_quote or is_comment:
+                buffer += letter
+                if is_comment and buffer.endswith("-->"):
+                    root.digest(buffer)
+                    is_comment = False
+                    is_tag = False
+                    buffer = ""
+                continue
+            else:
+                root.digest(buffer + letter)
+                buffer = ""
+                is_tag = False
+        elif letter in "'\"" and is_tag and not is_comment:
+            if current_quote:
+                if current_quote == letter:
+                    current_quote = None
+            else:
+                current_quote = letter
+            buffer += letter
+        elif letter == "-":
+            buffer += letter
+            if buffer.startswith("<!--"):
+                is_comment = True
         else:
             buffer += letter
+
+    if buffer.strip():
+        root.digest(buffer)
 
     return root
