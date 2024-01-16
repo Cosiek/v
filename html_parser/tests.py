@@ -54,6 +54,7 @@ class HTMLParsingTestCase(TestCase):
             ("p", "<p style=\"xxx\">"),
             ("br", "<br/>"),
             ("br", "<br />"),
+            ("div", "<div\nid='whatever'>")
         ]
 
         for node_type, buffer in cases:

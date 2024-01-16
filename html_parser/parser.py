@@ -1,6 +1,6 @@
 import re
 
-NODE_TYPE_NAME_MATCHER = re.compile(r"<([a-zA-Z0-9]+)([(\/>) ]|$)")
+NODE_TYPE_NAME_MATCHER = re.compile(r"<([a-zA-Z0-9]+)([\/> ]|$)", re.MULTILINE)
 
 
 # A void element is one that cannot have any child nodes
