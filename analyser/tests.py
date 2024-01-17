@@ -33,7 +33,7 @@ class TextAnalysisTestCase(TestCase):
             if word == "test":
                 self.assertEqual(output[word], 2)
             else:
-                self.assertEqual(output[word], 1)
+                self.assertEqual(output[word.lower()], 1, msg=f"Error for word: {word}")
 
     def test_get_most_frequent_words(self):
         input_ = {
